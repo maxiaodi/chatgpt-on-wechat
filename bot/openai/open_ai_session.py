@@ -28,7 +28,7 @@ class OpenAISession(Session):
             prompt += "A: "
         return prompt
 
-    def discard_exceeding(self, max_tokens, cur_tokens=None):
+    def discard_exceeding(self, max_tokens=None, cur_tokens=None):
         precise = True
         try:
             cur_tokens = self.calc_tokens()

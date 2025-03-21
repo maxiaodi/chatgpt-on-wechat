@@ -35,10 +35,10 @@ class OpenAIBot(Bot):
         self.sessions = SessionManager(OpenAISession, model=conf().get("model") or "text-davinci-003")
         self.args = {
             "model": conf().get("model") or "text-davinci-003",  # 对话模型的名称
-            "response_format": {"type": "json_object"},
+            # "response_format": {"type": "json_object"},
             "temperature": conf().get("temperature", 0.9),  # 值在[0,1]之间，越大表示回复越具有不确定性
-            "max_tokens": 1200,  # 回复最大的字符数
-            "top_p": 1.0,
+            "max_tokens": 100,  # 回复最大的字符数
+            "top_p": 0.85,
             "frequency_penalty": conf().get("frequency_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
             "presence_penalty": conf().get("presence_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
             # "request_timeout": conf().get("request_timeout", None),  # 请求超时时间，openai接口默认设置为600，对于难问题一般需要较长时间
