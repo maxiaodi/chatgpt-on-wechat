@@ -39,11 +39,11 @@ class OpenAIBot(Bot):
             "temperature": conf().get("temperature", 0.9),  # 值在[0,1]之间，越大表示回复越具有不确定性
             "max_tokens": 1200,  # 回复最大的字符数
             "top_p": 1.0,
-            # "frequency_penalty": conf().get("frequency_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
-            # "presence_penalty": conf().get("presence_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
+            "frequency_penalty": conf().get("frequency_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
+            "presence_penalty": conf().get("presence_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
             # "request_timeout": conf().get("request_timeout", None),  # 请求超时时间，openai接口默认设置为600，对于难问题一般需要较长时间
-            # "timeout": conf().get("request_timeout", None),  # 重试超时时间，在这个时间内，将会自动重试
-            # "stop": ["\n\n\n"],
+            "timeout": conf().get("request_timeout", None),  # 重试超时时间，在这个时间内，将会自动重试
+            "stop": ["\n\n\n"],
         }
 
     def reply(self, query, context=None):
