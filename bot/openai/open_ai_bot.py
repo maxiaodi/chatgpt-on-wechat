@@ -24,10 +24,10 @@ class OpenAIBot(Bot):
     def __init__(self):
         super().__init__()
         if conf().get("open_ai_api_base"):
-            self.openai = OpenAI(api_key=conf().get("open_ai_api_key"),
-                                 base_url=conf().get("open_ai_api_key"))
+            self.openai_bot = OpenAI(api_key=conf().get("open_ai_api_key"),
+                                      base_url=conf().get("open_ai_api_base"))
         else:
-            self.openai = OpenAI(api_key=conf().get("open_ai_api_key"))
+            self.openai_bot = OpenAI(api_key=conf().get("open_ai_api_key"))
         proxy = conf().get("proxy")
         if proxy:
             openai.proxy = proxy
@@ -35,9 +35,10 @@ class OpenAIBot(Bot):
         self.sessions = SessionManager(OpenAISession, model=conf().get("model") or "text-davinci-003")
         self.args = {
             "model": conf().get("model") or "text-davinci-003",  # 对话模型的名称
-            # "temperature": conf().get("temperature", 0.9),  # 值在[0,1]之间，越大表示回复越具有不确定性
-            # "max_tokens": 1200,  # 回复最大的字符数
-            # "top_p": 1,
+            "response_format": {"type": "json_object"},
+            "temperature": conf().get("temperature", 0.9),  # 值在[0,1]之间，越大表示回复越具有不确定性
+            "max_tokens": 1200,  # 回复最大的字符数
+            "top_p": 1.0,
             # "frequency_penalty": conf().get("frequency_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
             # "presence_penalty": conf().get("presence_penalty", 0.0),  # [-2,2]之间，该值越大则更倾向于产生不同的内容
             # "request_timeout": conf().get("request_timeout", None),  # 请求超时时间，openai接口默认设置为600，对于难问题一般需要较长时间
@@ -61,10 +62,11 @@ class OpenAIBot(Bot):
                 else:
                     session = self.sessions.session_query(query, session_id)
                     result = self.reply_text(session)
+                    logger.info("[OPEN_AI] result={}".format(result))
                     total_tokens, completion_tokens, reply_content = (
-                        result["total_tokens"],
-                        result["completion_tokens"],
-                        result["content"],
+                        result.get("total_tokens"),
+                        result.get("completion_tokens"),
+                        result.get("content"),
                     )
                     logger.debug(
                         "[OPEN_AI] new_query={}, session_id={}, reply_cont={}, completion_tokens={}".format(
@@ -88,11 +90,14 @@ class OpenAIBot(Bot):
 
     def reply_text(self, session: OpenAISession, retry_count=0):
         try:
-            response = self.openai.chat.completions.create(messages=session.messages(), **self.args)
+            response = self.openai_bot.chat.completions.create(messages=session.messages, **self.args)
+            # openai_bot = OpenAI(api_key="sk-gychqsmwnyofhucnlpgfjylbktcrljfzviobcuctqmilsmsl",
+            #                 base_url="https://api.siliconflow.cn/v1")
+            # response = openai_bot.chat.completions.create(messages=session.messages, **self.args)
             logger.info("[OPEN_AI] response={}".format(response))
             res_content = response.choices[0].message.content.strip().replace("<|endoftext|>", "")
-            total_tokens = response["usage"]["total_tokens"]
-            completion_tokens = response["usage"]["completion_tokens"]
+            total_tokens = response.usage.total_tokens
+            completion_tokens = response.usage.completion_tokens
             logger.info("[OPEN_AI] reply={}".format(res_content))
             return {
                 "total_tokens": total_tokens,
