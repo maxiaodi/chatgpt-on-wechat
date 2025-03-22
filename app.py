@@ -68,6 +68,7 @@ def run():
 def siliconflow_test():
 
     from openai import OpenAI
+    load_config()
 
     client = OpenAI(api_key="sk-gychqsmwnyofhucnlpgfjylbktcrljfzviobcuctqmilsmsl",
                     base_url="https://api.siliconflow.cn/v1")
@@ -75,8 +76,9 @@ def siliconflow_test():
         # model='Pro/deepseek-ai/DeepSeek-R1',
         model="Qwen/Qwen2.5-72B-Instruct",
         messages=[
+            {"role": "system", "content": conf().get("character_desc")},
             {'role': 'user',
-             'content': "你好"}
+             'content': "你好，茜茜"}
         ]
     )
 
