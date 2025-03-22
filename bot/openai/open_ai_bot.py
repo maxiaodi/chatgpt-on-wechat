@@ -77,17 +77,7 @@ class OpenAIBot(Bot):
                         reply = Reply(ReplyType.ERROR, reply_content)
                     else:
                         self.sessions.session_reply(reply_content, session_id, total_tokens)
-
-                        reply=[]
-                        if '\\' in reply_content:
-                            parts = [p.strip() for p in reply_content.split('\\') if p.strip()]
-                            for i, part in enumerate(parts):
-                                reply_ = Reply(ReplyType.TEXT, reply_content)
-                                reply.append(reply_)
-                        else:
-                            reply = Reply(ReplyType.TEXT, reply_content)
-
-                        # reply = Reply(ReplyType.TEXT, reply_content)
+                        reply = Reply(ReplyType.TEXT, reply_content)
                 return reply
             elif context.type == ContextType.IMAGE_CREATE:
                 ok, retstring = self.create_img(query, 0)

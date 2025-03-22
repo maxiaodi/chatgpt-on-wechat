@@ -1,4 +1,5 @@
 import os
+import random
 import re
 import threading
 import time
@@ -176,7 +177,20 @@ class ChatChannel(Channel):
             reply = self._decorate_reply(context, reply)
 
             # reply的发送步骤
-            self._send_reply(context, reply)
+            if ReplyType.TEXT == reply.type:
+                if '\\' in reply.content:
+                    parts = [p.strip() for p in reply.content.split('\\') if p.strip()]
+                    for i, part in enumerate(parts):
+                        self._send_reply(context, Reply(ReplyType.TEXT, part))
+                        if i < len(parts) - 1:
+                            next_part = parts[i + 1]
+                            # 计算延时时间，模拟打字速度
+                            delay = random.random()
+                            time.sleep(delay)
+                else:
+                    self._send_reply(context, reply)
+            else:
+                self._send_reply(context, reply)
 
     def _generate_reply(self, context: Context, reply: Reply = Reply()) -> Reply:
         e_context = PluginManager().emit_event(
