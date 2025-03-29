@@ -17,6 +17,7 @@ from plugins import *
     version="0.5",
     author="goldfishh",
     desire_priority=0,
+    hidden=True,
 )
 class Tool(Plugin):
     def __init__(self):
