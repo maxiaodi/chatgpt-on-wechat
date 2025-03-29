@@ -1,14 +1,5 @@
-import plugins
-import requests
-import re
-import json
-from urllib.parse import urlparse
-from bridge.context import ContextType
-from bridge.reply import Reply, ReplyType
-from channel import channel
-from common.log import logger
-from plugins import *
-from datetime import datetime, timedelta
+
+
 import easyquotation
 
 
