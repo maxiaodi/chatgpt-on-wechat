@@ -28,7 +28,7 @@ def sigterm_handler_wrap(_signo):
 def start_channel(channel_name: str):
     channel = channel_factory.create_channel(channel_name)
     if channel_name in ["wx", "wxy", "terminal", "wechatmp","web", "wechatmp_service", "wechatcom_app", "wework",
-                        const.FEISHU, const.DINGTALK]:
+                        const.FEISHU, const.DINGTALK, const.WECHATFERRY]:
         PluginManager().load_plugins()
 
     if conf().get("use_linkai"):
@@ -68,21 +68,24 @@ def run():
 def siliconflow_test():
 
     from openai import OpenAI
-    load_config()
-
-    client = OpenAI(api_key="sk-gychqsmwnyofhucnlpgfjylbktcrljfzviobcuctqmilsmsl",
-                    base_url="https://api.siliconflow.cn/v1")
+    # load_config()
+    print("begin")
+    t1 = time.time()
+    client = OpenAI(api_key="sk-41S3S2kLc3XjZwQjZho4HcSr6HOcAXteZfP4bFG9y3Emkpf6",
+                    base_url="https://chat.cloudapi.vip/v1")
     response = client.chat.completions.create(
         # model='Pro/deepseek-ai/DeepSeek-R1',
-        model="Qwen/Qwen2.5-72B-Instruct",
+        model="claude-3-7-sonnet-20250219",
         messages=[
-            {"role": "system", "content": conf().get("character_desc")},
+            {"role": "system", "content": "你是一个机器人"},
             {'role': 'user',
-             'content': "你好，茜茜"}
+             'content': "你好"}
         ]
     )
 
-    res_content = response.choices[0].message.content.strip().replace("<|endoftext|>", "")
+    t2 = time.time()
+    print(f"time = {str(t2-t1)}")
+    res_content = response.choices[0].message.content
     print(res_content)
 
     # for chunk in response:

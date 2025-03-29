@@ -185,7 +185,7 @@ class ChatChannel(Channel):
                         if i < len(parts) - 1:
                             next_part = parts[i + 1]
                             # 计算延时时间，模拟打字速度
-                            delay = random.random()
+                            delay = random.random() * 5
                             time.sleep(delay)
                 else:
                     self._send_reply(context, reply)

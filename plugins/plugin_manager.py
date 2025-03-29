@@ -85,6 +85,15 @@ class PluginManager:
             logger.error(e)
 
     def scan_plugins(self):
+        # 扫描插件目录：遍历 ./plugins 目录下的所有子目录，寻找有效的插件
+        #
+        # 加载/重载插件：
+        #   对于新发现的插件，进行导入加载
+        #   对于已加载的插件，进行重载（除了 GODCMD 插件）
+        # 管理插件配置：
+        #   检查插件是否存在于配置中
+        #   更新插件的启用状态和优先级
+        #   必要时保存配置变更
         logger.info("Scaning plugins ...")
         plugins_dir = "./plugins"
         raws = [self.plugins[name] for name in self.plugins]
