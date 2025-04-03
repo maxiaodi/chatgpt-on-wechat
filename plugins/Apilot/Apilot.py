@@ -189,6 +189,8 @@ class Apilot(Plugin):
                         weiyu = morning_news_info["data"][-1].strip()
                         return f"{formatted_news}\n\n{weiyu}\n\n 图片url：{morning_news_info['imgUrl']}"
                     else:
+                        img_url = morning_news_info['imgUrl']
+                        img_url = img_url.replace("https://", "http://", 1)
                         return morning_news_info['imgUrl']
                 else:
                     return self.handle_error(morning_news_info, '早报信息获取失败，可配置"alapi token"切换至 Alapi 服务，或者稍后再试')
@@ -205,6 +207,7 @@ class Apilot(Plugin):
                 morning_news_info = self.make_request(url, method="POST", headers=headers, data=data)
                 if isinstance(morning_news_info, dict) and morning_news_info.get('code') == 200:
                     img_url = morning_news_info['data']['image']
+                    img_url = img_url.replace("https://", "http://", 1)
                     if morning_news_text_enabled:
                         news_list = morning_news_info['data']['news']
                         weiyu = morning_news_info['data']['weiyu']

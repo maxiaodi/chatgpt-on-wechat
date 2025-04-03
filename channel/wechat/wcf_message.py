@@ -7,7 +7,10 @@ wechat channel message
 from bridge.context import ContextType
 from channel.chat_message import ChatMessage
 from common.log import logger
+from common.tmp_dir import TmpDir
 from wcferry import WxMsg
+
+from lib.itchat.content import *
 
 
 class WechatfMessage(ChatMessage):
@@ -32,6 +35,10 @@ class WechatfMessage(ChatMessage):
         if wcf_msg.is_text():
             self.ctype = ContextType.TEXT
             self.content = wcf_msg.content
+        # elif wcf_msg.type == PICTURE and wcf_msg["MsgType"] == 3:
+        #     self.ctype = ContextType.IMAGE
+        #     self.content = TmpDir().path() + wcf_msg["FileName"]  # content直接存临时目录路径
+        #     self._prepare_fn = lambda: wcf_msg.download(self.content)
         else:
             raise NotImplementedError(f"Unsupported message type: {wcf_msg.type}")
 

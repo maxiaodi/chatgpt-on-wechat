@@ -16,6 +16,7 @@ from bridge.context import *
 from bridge.reply import *
 from channel.chat_channel import ChatChannel
 from channel.wechat.wcf_message import WechatfMessage
+from common.download_file import DownloadFile
 from common.log import logger
 from common.singleton import singleton
 from common.utils import *
@@ -39,6 +40,7 @@ class WechatfChannel(ChatChannel):
         # 初始化wcferry客户端
         self.wcf = Wcf()
         self.wxid = None  # 登录后会被设置为当前登录用户的wxid
+        self.download_file = DownloadFile()
 
     def startup(self):
         """
@@ -133,6 +135,10 @@ class WechatfChannel(ChatChannel):
                             at_list = [context["msg"].actual_user_id]
                 at_str = ",".join(at_list) if at_list else ""
                 self.wcf.send_text(reply.content, receiver, at_str)
+            elif reply.type == ReplyType.IMAGE_URL or reply.type == ReplyType.IMAGE:
+                # 下载文件到本地，然后发送文件
+                self.wcf.send_image(reply.content, receiver)
+
 
             elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
                 self.wcf.send_text(reply.content, receiver)
