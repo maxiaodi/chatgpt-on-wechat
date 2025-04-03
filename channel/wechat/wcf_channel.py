@@ -21,6 +21,9 @@ from common.singleton import singleton
 from common.utils import *
 from config import conf, get_appdata_dir
 from wcferry import Wcf, WxMsg
+from datetime import datetime, time as dt_time
+from stock.stock_data import SocketData
+
 
 
 @singleton
@@ -29,6 +32,7 @@ class WechatfChannel(ChatChannel):
 
     def __init__(self):
         super().__init__()
+        self.stock = {}
         self.NOT_SUPPORT_REPLYTYPE = []
         # 使用字典存储最近消息，用于去重
         self.received_msgs = {}
@@ -49,6 +53,8 @@ class WechatfChannel(ChatChannel):
             self.contact_cache.update()
             # 启动消息接收
             self.wcf.enable_receiving_msg()
+            # 设置定时任务
+            self.load_shedule()
             # 创建消息处理线程
             t = threading.Thread(target=self._process_messages, name="WeChatThread", daemon=True)
             t.start()
@@ -65,6 +71,8 @@ class WechatfChannel(ChatChannel):
         while True:
             try:
                 msg = self.wcf.get_msg()
+
+                self.runPendingJobs()
                 if msg:
                     self._handle_message(msg)
             except Empty:
@@ -85,7 +93,8 @@ class WechatfChannel(ChatChannel):
                 return
             self.received_msgs[cmsg.msg_id] = time.time()
             # 清理过期消息ID
-            self._clean_expired_msgs()
+            expires_in_seconds = conf().get("expires_in_seconds", 3600)
+            self._clean_expired_msgs(expires_in_seconds)
 
             logger.debug(f"收到消息: {msg}")
             context = self._compose_context(cmsg.ctype, cmsg.content,
@@ -119,8 +128,9 @@ class WechatfChannel(ChatChannel):
                 # 处理@信息
                 at_list = []
                 if context.get("isgroup"):
-                    if context["msg"].actual_user_id:
-                        at_list = [context["msg"].actual_user_id]
+                    if context["msg"] is not None:
+                        if context["msg"].actual_user_id:
+                            at_list = [context["msg"].actual_user_id]
                 at_str = ",".join(at_list) if at_list else ""
                 self.wcf.send_text(reply.content, receiver, at_str)
 
@@ -140,6 +150,50 @@ class WechatfChannel(ChatChannel):
             self.wcf.cleanup()
         except Exception as e:
             logger.error(f"关闭通道失败: {e}")
+
+    def load_shedule(self):
+        self.onEveryMinutes(1, self.run_job_if_valid)
+
+    def run_job_if_valid(self,):
+        def is_weekday():
+            return datetime.today().weekday() < 5  # 0-4 表示周一到周五
+
+        def is_working_hours():
+            now = datetime.now().time()
+            return (dt_time(9, 30) <= now <= dt_time(11, 30)) or (dt_time(13, 00) <= now <= dt_time(15, 00))
+
+        stock_code_list = conf().get("stockCode")
+        get_stock_flag = conf().get("getStock")
+        stock_msg_getters = conf().get("stockMsgGetters")
+
+        message = ""
+        if is_weekday() and is_working_hours() and get_stock_flag:
+            for stock_code in stock_code_list:
+                stock_code_dict = self.stock.get(stock_code, {})
+                socket_data = SocketData()
+                now_price = socket_data.getStockData(stock_code)
+                ma_5_price, ma_60_price = socket_data.getStockMa60(stock_code)
+                ma_60_count = stock_code_dict.get("ma_60_count", 0)
+                ma_5_count = stock_code_dict.get("ma_5_count", 0)
+                if now_price < ma_60_price and ma_60_count <= 0:
+                    message = message + stock_code + "现价低于60日均线\n"
+                    stock_code_dict["ma_60_count"] = 20
+                    logger.info()
+                elif now_price < ma_5_price and ma_5_count <= 0:
+                    message = message + stock_code + "现价低于5日均线\n"
+                    stock_code_dict["ma_5_count"] = 20
+                stock_code_dict["ma_60_count"] = ma_60_count - 1
+                stock_code_dict["ma_5_count"] = ma_5_count - 1
+
+            # 发送消息
+            if message is not "":
+                reply = Reply(ReplyType.TEXT, message)
+                for receiver in stock_msg_getters:
+                    context = Context()
+                    kwargs = {'isgroup': False, 'receiver': receiver}
+                    context.kwargs = kwargs
+                    self.send(reply, context)
+
 
 
 class ContactCache:

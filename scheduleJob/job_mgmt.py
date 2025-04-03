@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import time
+from datetime import datetime, time as dt_time
 from typing import Any, Callable
 
 import schedule
+
+from bridge.reply import Reply, ReplyType
+from config import conf
+from stock.stock_data import SocketData
 
 
 class Job(object):
@@ -67,17 +72,34 @@ class Job(object):
     def runPendingJobs(self) -> None:
         schedule.run_pending()
 
+def run_job_if_valid():
+    stock_code_list = conf().get("stockCode")
+    get_stock_flag = conf().get("getStock")
+    if is_weekday() and is_working_hours() and get_stock_flag:
+        for stock_code in stock_code_list:
+            socket_data = SocketData()
+            now_price = socket_data.getStockData(stock_code)
+            ma_5_price, ma_60_price = socket_data.getStockMa60(stock_code)
+            print(now_price)
+            print(ma_60_price)
+            print(ma_5_price)
+            reply = Reply(ReplyType.TEXT, "reply_content")
+
+def is_weekday():
+    return datetime.today().weekday() < 5  # 0-4 表示周一到周五
+def is_working_hours():
+    now = datetime.now().time()
+    return (dt_time(9, 30) <= now <= dt_time(11, 30)) or (dt_time(13, 00) <= now <= dt_time(15, 00))
+
 
 if __name__ == "__main__":
     def printStr(s):
         print(s)
 
     job = Job()
-    job.onEverySeconds(2, printStr, "onEverySeconds 59")
-    job.onEveryMinutes(59, printStr, "onEveryMinutes 59")
-    job.onEveryHours(23, printStr, "onEveryHours 23")
-    job.onEveryDays(1, printStr, "onEveryDays 1")
-    job.onEveryTime("23:59", printStr, "onEveryTime 23:59")
+    stock_code = "sh601288"
+    job.onEveryMinutes(5, run_job_if_valid)
+    # job.onEverySeconds(1, run_job_if_valid, stock_code)
 
     while True:
         job.runPendingJobs()

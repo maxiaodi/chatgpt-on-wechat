@@ -9,4 +9,4 @@ Pillow
 web.py
 linkai>=0.0.6.0
 schedule==1.2.2
-easyquotation==0.7.7
+# easyquotation==0.7.7
