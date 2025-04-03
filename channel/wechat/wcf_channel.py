@@ -178,7 +178,6 @@ class WechatfChannel(ChatChannel):
                 if now_price < ma_60_price and ma_60_count <= 0:
                     message = message + stock_code + "现价低于60日均线\n"
                     stock_code_dict["ma_60_count"] = 20
-                    logger.info()
                 elif now_price < ma_5_price and ma_5_count <= 0:
                     message = message + stock_code + "现价低于5日均线\n"
                     stock_code_dict["ma_5_count"] = 20
@@ -188,6 +187,7 @@ class WechatfChannel(ChatChannel):
             # 发送消息
             if message is not "":
                 reply = Reply(ReplyType.TEXT, message)
+                logger.info("[info]股票信息:" + reply.content)
                 for receiver in stock_msg_getters:
                     context = Context()
                     kwargs = {'isgroup': False, 'receiver': receiver}
